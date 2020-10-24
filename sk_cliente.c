@@ -5,9 +5,20 @@
 #include <sys/socket.h> 
 #include <arpa/inet.h> 
 #include <string.h> 
+#include <stdint.h>
 #include <time.h>
 #define PORT 8080 
-   
+#define DATA_LEN 1024
+
+typedef struct msg
+{
+	uint8_t numSeq;
+	int CRC8;
+	char data[DATA_LEN];
+	uint16_t length;
+	uint8_t tipo;
+}msga;   
+
 int getSock()
 {
 	int sock = 0;
@@ -30,7 +41,7 @@ struct sockaddr_in configAddress()
 
 struct sockaddr_in configIPAddr(struct sockaddr_in serv_addr)
 {// Convert IPv4 and IPv6 addresses from text to binary form 
-	if(inet_pton(AF_INET, "127.0.0.97", &serv_addr.sin_addr)<=0)  
+	if(inet_pton(AF_INET, "127.0.0.77", &serv_addr.sin_addr)<=0)  
 	{ 
 		printf("\nInvalid address/ Address not supported \n"); 
 		exit(EXIT_FAILURE); 
@@ -80,7 +91,7 @@ int main(int argc, char const *argv[])
 	struct sockaddr_in serv_addr; 
     int sock = 0, valread, leidos; 
     unsigned long long numPaquetes=0; 
-    char buffer[1024]={0}, dir[100], Ctrue[1], buf[1024]={0};
+    char buffer[DATA_LEN]={0}, dir[100], Ctrue[1], buf[DATA_LEN]={0};
     char *conf = strdup(argv[1]), *porConf = strdup(argv[2]);
     char *cron = strdup(argv[3]), *porCron = strdup(argv[4]);
     float conf_max = 0.0, nueva_conf;
@@ -116,14 +127,16 @@ int main(int argc, char const *argv[])
 
 		//generar la semilla de random para confirmaciones
 		srand(time(NULL));
-
+	
+		struct msg paquete;
 		//mientras numero de datos leidos != 0
-    	while((valread = read(sock, &buf, 1024)) != 0)
+    	while((read(sock, &paquete, sizeof(paquete))) != 0 )
+
     	{
-    		nueva_conf = getConfirmacion();
-    		nuevo_cron = getCronometro();
-    		printf("Error %f --",nueva_conf);
-			printf("Temp %f \n",nuevo_cron);
+    		//nueva_conf = getConfirmacion();
+    		//nuevo_cron = getCronometro();
+    		//printf("Error %f --",nueva_conf);
+			//printf("Temp %f \n",nuevo_cron);
 			
 			if(nueva_conf <= conf_max){
 				//confirmar mensaje
@@ -131,8 +144,8 @@ int main(int argc, char const *argv[])
 			if(nuevo_cron <= cron_max){
 				//temporizador
 			}
-			
-			fwrite(&buf, 1, valread, archCopy);
+
+			fwrite(&paquete.data, 1, paquete.length, archCopy);
     	}
     	
 	    printf("Archivo recibido \n");
