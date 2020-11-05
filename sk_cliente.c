@@ -7,7 +7,7 @@
 #include <string.h> 
 #include <stdint.h>
 #include <time.h>
-#define PORT 8080 
+#define PORT 8070
 #define DATA_LEN 1024
 
 typedef struct msg
@@ -17,7 +17,7 @@ typedef struct msg
 	char data[DATA_LEN];
 	uint16_t length;
 	uint8_t tipo;
-}msga;   
+}msg;   
 
 int getSock()
 {
@@ -41,7 +41,7 @@ struct sockaddr_in configAddress()
 
 struct sockaddr_in configIPAddr(struct sockaddr_in serv_addr)
 {// Convert IPv4 and IPv6 addresses from text to binary form 
-	if(inet_pton(AF_INET, "127.0.0.77", &serv_addr.sin_addr)<=0)  
+	if(inet_pton(AF_INET, "127.0.1.1", &serv_addr.sin_addr)<=0)  
 	{ 
 		printf("\nInvalid address/ Address not supported \n"); 
 		exit(EXIT_FAILURE); 
@@ -89,7 +89,7 @@ float getValor(char *str, char *c, char *cr)
 int main(int argc, char const *argv[]) 
 { 
 	struct sockaddr_in serv_addr; 
-    int sock = 0, valread, leidos; 
+    int sock = 0; 
     unsigned long long numPaquetes=0; 
     char buffer[DATA_LEN]={0}, dir[100], Ctrue[1], buf[DATA_LEN]={0};
     char *conf = strdup(argv[1]), *porConf = strdup(argv[2]);
@@ -129,21 +129,26 @@ int main(int argc, char const *argv[])
 		srand(time(NULL));
 	
 		struct msg paquete;
+		paquete.numSeq = 0;
+		paquete.CRC8 = 0;
+		paquete.tipo = 0;
 		//mientras numero de datos leidos != 0
-    	while((read(sock, &paquete, sizeof(paquete))) != 0 )
-
+		
+    	while( (paquete.length = read(sock, &paquete.data, DATA_LEN)) != 0 )
     	{
+    	printf("tipo%d length=%d num%d\n",paquete.tipo,paquete.length,paquete.numSeq);
+
     		//nueva_conf = getConfirmacion();
     		//nuevo_cron = getCronometro();
     		//printf("Error %f --",nueva_conf);
 			//printf("Temp %f \n",nuevo_cron);
-			
+			/*
 			if(nueva_conf <= conf_max){
 				//confirmar mensaje
 			}
 			if(nuevo_cron <= cron_max){
 				//temporizador
-			}
+			}*/
 
 			fwrite(&paquete.data, 1, paquete.length, archCopy);
     	}
